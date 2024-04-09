@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+openai
+lanchain
+lanchain-core
+lanchain-openai
+pandas
