@@ -1,7 +1,7 @@
 fastapi
 uvicorn
 openai
-lanchain
-lanchain-core
-lanchain-openai
+langchain
+langchain-core
+langchain-openai
 pandas
