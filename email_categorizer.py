@@ -1,7 +1,7 @@
 
-def check_consulting_email(client, lates_reply: str):
+def check_consulting_email(client, latest_reply: str):
     prompt = f"""
-    EMAIL: {lates_reply}
+    EMAIL: {latest_reply}
     ---
 
     Above is an email about Job offer / consulting; Your goal is identify if all information above is mentioned:
@@ -54,17 +54,21 @@ def categorise_email(client, latest_reply: str):
     category = category_result.choices[0].message.content
     print(f'Category is - {category}')
     if category == "JOB_OFFER/CONSULTING":
-        all_needs_collected = check_consulting_email(latest_reply)
+        all_needs_collected = check_consulting_email(client, latest_reply)
         if all_needs_collected == "YES":
             return {
                 "Category": "JOB_OFFER/CONSULTING",
-                "Step 1": """Forward the email to jason.zhou.design@gmail.com, with summary of 1.What's the problem the prospect is trying to solve?  2.Their budget"""
+                "Step 1": """Generate a summary of the following 1.What's the problem the prospect is trying to solve?  2.Their budget""",
+                "all_needs_collected": all_needs_collected,
             }
         else:
             return {
                 "Category": "JOB_OFFER/CONSULTING",
-                "Step 1": "Generate email response to the prospect to collect further info based on guidelines",
+                "Step 1": """Generate email response to the prospect to collect further info based on the following - 
+                            1. What's the problem the prospect is trying to solve? 
+                            2. Their budget""",
                 "Step 2": "Send generated email response to prospect",
+                "all_needs_collected": all_needs_collected,
             }
     elif category == "COLLABORATION/SPONSORSHIP":
         return {
