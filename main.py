@@ -28,6 +28,12 @@ def get_generated_email_response(q: List[str] = Query(None)):
                 'category': email_info['Category'],
                 'needs_collected': email_info['all_needs_collected']
             }
+            
+        elif ('NON_REPLY' in email_info['Category']) or ('OTHER' in email_info['Category']):
+            return {
+                'email': email,
+                'category': email_info['Category']
+            }
                 
     else:
         return None
