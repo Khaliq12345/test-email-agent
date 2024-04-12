@@ -1,4 +1,3 @@
-
 def check_consulting_email(client, latest_reply: str):
     prompt = f"""
     EMAIL: {latest_reply}
@@ -24,6 +23,25 @@ def check_consulting_email(client, latest_reply: str):
 
     return all_needs_collected
 
+def check_collab_email(client, latest_reply: str):
+    prompt = f"""
+    EMAIL: {latest_reply}
+    ---
+
+    Above is an email about Collaboration / Sponsorship; Your goal is identify the name of the company:
+
+    COMPANY: 
+    """
+
+    company_name_result = client.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
+    )
+    company_name = company_name_result.choices[0].message.content
+    return company_name
+    
 def categorise_email(client, latest_reply: str):
     categorise_prompt = f"""
     EMAIL: {latest_reply}
@@ -71,10 +89,12 @@ def categorise_email(client, latest_reply: str):
                 "all_needs_collected": all_needs_collected,
             }
     elif category == "COLLABORATION/SPONSORSHIP":
+        company_name = check_collab_email(client, latest_reply)
         return {
             "Category": "COLLABORATION/SPONSORSHIP",
             "Step 1": "Research about the prospect & company",
-            "Step 2": "Forward the email to jason.zhou.design@gmail.com, with the research results included"
+            "Step 2": "Forward the email to jason.zhou.design@gmail.com, with the research results included",
+            'company_name': company_name
         }
     elif category == "QUESTIONS":
         return {
