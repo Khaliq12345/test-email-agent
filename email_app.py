@@ -5,6 +5,7 @@ from langchain_openai import ChatOpenAI
 import pandas as pd
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from operator import itemgetter
+from googlesearch import search
 
 #QUESTIONS
 QUESTION = """
@@ -20,23 +21,6 @@ EMAIL: ''' {email} '''
 
 ===
 GENERATE RESPONSE:
-"""
-
-#JOB_OFFER/CONSULTING
-CONSULTING = """
-You are an email inbox manager for Synergize AI Team; Your goal is to help summarize emails that are about Job offer or Consulting.
-And you must generate an email summary about the following:
-1. What's the problem the prospect is trying to solve? 
-2. Their budget
-
-===
-Info about email:
-NEW PROSPECT EMAIL: {email_address}
-SUBJECT: {subject}
-EMAIL: ''' {email} '''
-
-===
-GENERATE Summary:
 """
 
 #JOB_OFFER/CONSULTING2
@@ -64,6 +48,25 @@ EMAIL: ''' {email} '''
 GENERATE SUMMARY or RESPONSE:
 """
 
+#COLLABORATION
+COLLAB = """
+
+COMPANY SUMMARY: {summary}
+
+You are an email inbox manager for Synergize AI Team; Your goal is to help with emais that are about Collaboration / Paternerhship.
+
+Forward the email to kiberkhaliq@gmail.com, with the research results about the company included.
+
+===
+Info about email:
+NEW PROSPECT EMAIL: {email_address}
+SUBJECT: {subject}
+EMAIL: ''' {email} '''
+
+===
+RETURN ONLY THE FORWARDED EMAIL BODY.
+"""
+
 
 class EmailGenerator:
     def __init__(self):
@@ -74,6 +77,18 @@ class EmailGenerator:
         )
         self.llm = ChatOpenAI(temperature=0, model_name="gpt-4", api_key=config.openai_key)
         self.faq = self.load_faq()
+
+    def get_leads(self, company_name):
+        company_info = list(search(f'{company_name}', advanced=True, num_results=1))
+        company_info = company_info[0]
+        url = company_info.url
+        description = company_info.description
+        summary = {
+            'name': company_name,
+            'url': url,
+            'description': description 
+        }
+        return summary
 
     def get_email_category(self, email):
         email_obj = categorise_email(self.client, email)
@@ -125,3 +140,24 @@ class EmailGenerator:
         })
         return email_response
             
+    def collab_chain(self, email, prospect_email, subject, company_name):
+        company_summary = self.get_leads(company_name)
+        # prompt = ChatPromptTemplate.from_template(COLLAB)
+        # chain = (
+        #     {
+        #         "summary": itemgetter('summary'),
+        #         'email_address': itemgetter('email_address'),
+        #         'subject': itemgetter('subject'),
+        #         'email': itemgetter('email'),
+        #     }
+        #     | prompt
+        #     | self.llm
+        # )
+        # email_summary = chain.invoke({
+        #     "summary": company_summary,
+        #     'email_address': prospect_email,
+        #     'subject': subject,
+        #     'email': email,
+        # })
+        return company_summary
+
