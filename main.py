@@ -28,12 +28,22 @@ def get_generated_email_response(q: List[str] = Query(None)):
                 'category': email_info['Category'],
                 'needs_collected': email_info['all_needs_collected']
             }
-            
+        
         elif ('NON_REPLY' in email_info['Category']) or ('OTHER' in email_info['Category']):
             return {
                 'email': email,
                 'category': email_info['Category']
             }
-                
+            
+        elif 'COLLABORATION/SPONSORSHIP' in email_info['Category']:
+            company_summary = email_gen.collab_chain(email, prospect_email, subject, company_name=email_info['company_name'])
+            return {
+                'company_summary': company_summary,
+                'category': email_info['Category'],
+                'company_name': email_info['company_name']
+            }      
     else:
-        return None
+        return {
+            'email': email,
+            'category': 'OTHER'
+        }
