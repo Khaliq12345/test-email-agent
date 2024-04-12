@@ -18,9 +18,10 @@ New email to reply:
 NEW PROSPECT EMAIL: {email_address}
 SUBJECT: {subject}
 EMAIL: ''' {email} '''
+FROM NAME: Synergize AI Team
 
 ===
-GENERATE RESPONSE:
+GENERATE RESPONSE (Return ONLY the Body of the email. NO SUBJECT, RECEIPIENT NAME):
 """
 
 #JOB_OFFER/CONSULTING2
@@ -30,7 +31,7 @@ ALL NEEDS COLLECTED: {needs_collected}
 
 You are an email inbox manager for Synergize AI Team; Your goal is to help with emais that are about Job offer or Consulting based on whether ALL NEEDS COLLECTED is YES or NO.
 
-If ALL NEEDS COLLECTED is YES, then you must generate an email summary about the following:
+If ALL NEEDS COLLECTED is YES, then you must generate and forward an email response to Diego about the following:
 1. What's the problem the prospect is trying to solve? 
 2. Their budget
 
@@ -43,9 +44,10 @@ Info about email:
 NEW PROSPECT EMAIL: {email_address}
 SUBJECT: {subject}
 EMAIL: ''' {email} '''
+FROM NAME: Synergize AI Team
 
 ===
-GENERATE SUMMARY or RESPONSE:
+GENERATE SUMMARY or RESPONSE (Return ONLY the Body of the email. NO SUBJECT, RECEIPIENT NAME):
 """
 
 #COLLABORATION
@@ -55,7 +57,7 @@ COMPANY SUMMARY: {summary}
 
 You are an email inbox manager for Synergize AI Team; Your goal is to help with emais that are about Collaboration / Paternerhship.
 
-Forward the email to kiberkhaliq@gmail.com, with the research results about the company included.
+Forward the email to Diego, with the research results about the company included.
 
 ===
 Info about email:
@@ -118,7 +120,7 @@ class EmailGenerator:
             'subject': subject,
             'email': email,
         })
-        return email_response
+        return email_response.content.replace('[Your Name]', 'Synergize AI Team')
     
     def consulting_chain(self, email, prospect_email, subject, needs_collected):
         prompt = ChatPromptTemplate.from_template(CONSULTING)
@@ -138,7 +140,7 @@ class EmailGenerator:
             'subject': subject,
             'email': email,
         })
-        return email_response
+        return email_response.content.replace('[Your Name]', 'Synergize AI Team')
             
     def collab_chain(self, email, prospect_email, subject, company_name):
         company_summary = self.get_leads(company_name)
