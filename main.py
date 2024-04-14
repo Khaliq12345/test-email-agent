@@ -36,12 +36,19 @@ def get_generated_email_response(q: List[str] = Query(None)):
             }
             
         elif 'COLLABORATION/SPONSORSHIP' in email_info['Category']:
-            company_summary = email_gen.collab_chain(email, prospect_email, subject, company_name=email_info['company_name'])
+            company_summary = email_gen.collab_chain(email, prospect_email, subject, company_info=email_info['company_info'])
             return {
                 'company_summary': company_summary,
                 'category': email_info['Category'],
-                'company_name': email_info['company_name']
+                'company_info': email_info['company_info']
             }      
+        
+        elif "MEETING/AVAILABILITY" in email_info['Category']:
+            generated_email = email_gen.meeting_chain(email, prospect_email, subject)
+            return {
+                'drafted_email': generated_email,
+                'category': email_info['Category']
+            }
     else:
         return {
             'email': email,
