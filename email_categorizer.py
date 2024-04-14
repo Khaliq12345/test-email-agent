@@ -1,3 +1,4 @@
+
 def check_consulting_email(client, latest_reply: str):
     prompt = f"""
     EMAIL: {latest_reply}
@@ -28,19 +29,54 @@ def check_collab_email(client, latest_reply: str):
     EMAIL: {latest_reply}
     ---
 
-    Above is an email about Collaboration / Sponsorship; Your goal is identify the name of the company:
+    You are a company enrichment AI Agent with good knowledge of the web.
+    Above is an email about Collaboration / Sponsorship; Your goal is to do a deep search about the company on the respective platforms to get the following information:
 
-    COMPANY: 
+    Name
+    Website
+    Description
+    Linkedin Url
+    Facebook
+    Twitter / X
+    Instagram
+    Revenue
+    Employees
+    Industry
+
+    (Return JSON)
+
+    JSON: 
     """
 
-    company_name_result = client.chat.completions.create(
+    company_info = client.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "user", "content": prompt}
         ]
     )
-    company_name = company_name_result.choices[0].message.content
-    return company_name
+    company_info = company_info.choices[0].message.content
+    return company_info
+   
+def check_company_in_email(client, latest_reply):
+    prompt = f"""
+    EMAIL: {latest_reply}
+    ---
+
+    You are an intelligent AI agent that can help extract the name of a company from a text.
+    
+    If company name is in email, return YES, otherwise, return NO; (Return ONLY YES or NO)
+
+    ANSWER: 
+    """
+
+    name_in_email = client.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
+    )
+    ans = name_in_email.choices[0].message.content
+    return ans   
     
 def categorise_email(client, latest_reply: str):
     categorise_prompt = f"""
@@ -54,6 +90,8 @@ def categorise_email(client, latest_reply: str):
     2. JOB_OFFER/CONSULTING: These emails involve individuals or companies reaching out to Synergize AI with a specific job or project they want the team to work on. This could range from developing an AI application to leading a specific activity.
 
     3. QUESTIONS: These emails involve individuals reaching out to Synergize AI with specific questions or inquiries. This could be about our videos, our knowledge on a specific topic, or our thoughts on a specific AI tool or technology.
+    
+    4. MEETING/AVAILABILITY: These emails involve individuals or company reaching out to Synergize AI with proposing a meeting, asking for availability or want to discuss their project or get more information about the tool.
 
     4. NON_REPLY: These are auto emails that don't need any response or involve companies or individuals reaching out to Synergize AI to offer their services. This could be a marketing agency offering to help us find sponsorship opportunities or a company offering a specific tool or service they think we might find useful.
 
@@ -71,6 +109,7 @@ def categorise_email(client, latest_reply: str):
 
     category = category_result.choices[0].message.content
     print(f'Category is - {category}')
+    
     if category == "JOB_OFFER/CONSULTING":
         all_needs_collected = check_consulting_email(client, latest_reply)
         if all_needs_collected == "YES":
@@ -88,27 +127,46 @@ def categorise_email(client, latest_reply: str):
                 "Step 2": "Send generated email response to prospect",
                 "all_needs_collected": all_needs_collected,
             }
+    
     elif category == "COLLABORATION/SPONSORSHIP":
-        company_name = check_collab_email(client, latest_reply)
+        is_company = check_company_in_email(client, latest_reply)
+        if 'YES' in is_company:
+            company_info = check_collab_email(client, latest_reply)
+        else:
+            company_info = {
+                'error': 'No company name in email'
+            }
         return {
             "Category": "COLLABORATION/SPONSORSHIP",
             "Step 1": "Research about the prospect & company",
             "Step 2": "Forward the email to jason.zhou.design@gmail.com, with the research results included",
-            'company_name': company_name
+            'company_info': company_info
         }
+        
     elif category == "QUESTIONS":
         return {
             "Category": "QUESTIONS",
             "Step 1": "Generate email response based on guidelines",
             "Step 2": "Create email draft with the generated response",
         }
+        
+    elif category == "MEETING/AVAILABILITY":
+        return {
+            'Category': 'MEETING/AVAILABILITY',
+            "Step 1": "Generate email response with the link to the meeting booking page",
+            "Step 2": "Send the email to the prospect"
+            
+        }    
+        
     elif category == 'NON_REPLY':
         return {
             'Category': 'NON_REPLY'
         }
+        
     elif category == 'OTHER':
         return {
             'Category': 'OTHER'
         }
+        
     else:
         pass
