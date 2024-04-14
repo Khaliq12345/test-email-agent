@@ -9,7 +9,10 @@ from googlesearch import search
 
 #QUESTIONS
 QUESTION = """
+Booking Page Link: "https://tidycal.com/synergizeai/agent-test"
+
 You are an email inbox manager for Synergize AI Team; Your goal is to help draft email response for the team.
+If the client propose a meeting or ask for availability, send the link to the booking page with the email response so that they can book the meeting whenever they are available
 
 KNOWLEDGE: {faq}
 
@@ -26,18 +29,19 @@ GENERATE RESPONSE (Return ONLY the Body of the email. NO SUBJECT, RECEIPIENT NAM
 
 #JOB_OFFER/CONSULTING2
 CONSULTING = """
+Booking Page Link: "https://tidycal.com/synergizeai/agent-test"
 
 ALL NEEDS COLLECTED: {needs_collected}
 
 You are an email inbox manager for Synergize AI Team; Your goal is to help with emais that are about Job offer or Consulting based on whether ALL NEEDS COLLECTED is YES or NO.
 
-If ALL NEEDS COLLECTED is YES, then you must generate and forward an email response to Diego about the following:
-1. What's the problem the prospect is trying to solve? 
-2. Their budget
+If ALL NEEDS COLLECTED is YES, send the link to the booking page with the email response so that they can book the meeting whenever they are available so that we can discuss the project further.
 
 If ALL NEEDS COLLECTED is NO, then you must generate email response to the prospect to collect further info based on the following - 
 1. What's the problem the prospect is trying to solve? 
 2. Their budget?
+
+If the client propose a meeting or ask for availability, send the link to the booking page with the email response so that they can book the meeting whenever they are available
 
 ===
 Info about email:
@@ -52,12 +56,18 @@ GENERATE SUMMARY or RESPONSE (Return ONLY the Body of the email. NO SUBJECT, REC
 
 #COLLABORATION
 COLLAB = """
+Booking Page Link: "https://tidycal.com/synergizeai/agent-test"
 
-COMPANY SUMMARY: {summary}
+COMPANY RESEARCH RESULT: {summary}
 
 You are an email inbox manager for Synergize AI Team; Your goal is to help with emais that are about Collaboration / Paternerhship.
 
 Forward the email to Diego, with the research results about the company included.
+
+If no research result, send an email back to the prospect for more information about their company.
+
+If the client propose a meeting or ask for availability, send the link to the booking page with the email response so that they can book the meeting whenever they are available.
+
 
 ===
 Info about email:
@@ -66,7 +76,26 @@ SUBJECT: {subject}
 EMAIL: ''' {email} '''
 
 ===
-RETURN ONLY THE FORWARDED EMAIL BODY.
+EMAIL (Return ONLY the Body of the email. NO SUBJECT, RECEIPIENT NAME).
+"""
+
+#Meeting
+MEETING = """ 
+Booking Page Link: "https://tidycal.com/synergizeai/agent-test"
+
+You are an email inbox manager for Synergize AI Team;
+
+Your goal is to help generate email response for the team and send them the link to the booking page above, so that they can book the meeting whenever they are available.
+
+===
+New email to reply:
+NEW PROSPECT EMAIL: {email_address}
+SUBJECT: {subject}
+EMAIL: ''' {email} '''
+FROM NAME: Synergize AI Team
+
+===
+GENERATE RESPONSE (Return ONLY the Body of the email. NO SUBJECT, RECEIPIENT NAME):
 """
 
 
@@ -142,24 +171,41 @@ class EmailGenerator:
         })
         return email_response.content.replace('[Your Name]', 'Synergize AI Team')
             
-    def collab_chain(self, email, prospect_email, subject, company_name):
-        company_summary = self.get_leads(company_name)
-        # prompt = ChatPromptTemplate.from_template(COLLAB)
-        # chain = (
-        #     {
-        #         "summary": itemgetter('summary'),
-        #         'email_address': itemgetter('email_address'),
-        #         'subject': itemgetter('subject'),
-        #         'email': itemgetter('email'),
-        #     }
-        #     | prompt
-        #     | self.llm
-        # )
-        # email_summary = chain.invoke({
-        #     "summary": company_summary,
-        #     'email_address': prospect_email,
-        #     'subject': subject,
-        #     'email': email,
-        # })
-        return company_summary
+    def collab_chain(self, email, prospect_email, subject, company_info):
+        prompt = ChatPromptTemplate.from_template(COLLAB)
+        chain = (
+            {
+                "summary": itemgetter('summary'),
+                'email_address': itemgetter('email_address'),
+                'subject': itemgetter('subject'),
+                'email': itemgetter('email'),
+            }
+            | prompt
+            | self.llm
+        )
+        email_summary = chain.invoke({
+            "summary": company_info,
+            'email_address': prospect_email,
+            'subject': subject,
+            'email': email,
+        })
+        return email_summary.content.replace('[Your Name]', 'Synergize AI Team')
 
+    def meeting_chain(self, email, prospect_email, subject):
+        PROMPT = ChatPromptTemplate.from_template(MEETING)
+        chain = (
+            {
+                'email_address': itemgetter('email_address'),
+                'subject': itemgetter('subject'),
+                'email': itemgetter('email'),
+            }
+            | PROMPT
+            | self.llm
+        )
+        email_response = chain.invoke({
+
+            'email_address': prospect_email,
+            'subject': subject,
+            'email': email,
+        })
+        return email_response.content.replace('[Your Name]', 'Synergize AI Team')
