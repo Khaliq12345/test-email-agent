@@ -55,19 +55,32 @@ GENERATE SUMMARY or RESPONSE (Return ONLY the Body of the email. NO SUBJECT, REC
 """
 
 #COLLABORATION
-COLLAB = """
+COLLAB_COMPANY = """
 Booking Page Link: "https://tidycal.com/synergizeai/agent-test"
 
 COMPANY RESEARCH RESULT: {summary}
 
-You are an email inbox manager for Synergize AI Team; Your goal is to help with emais that are about Collaboration / Paternerhship.
-
-Forward the email to Diego, with the research results about the company included.
-
-If no research result, send an email back to the prospect for more information about their company.
+You are an email inbox manager for Synergize AI Team; Your goal is to forward the email to Diego (Synergize AI Team Manager) with the COMPANY RESEARCH RESULT.
 
 If the client propose a meeting or ask for availability, send the link to the booking page with the email response so that they can book the meeting whenever they are available.
 
+Return only the email sent to Diego.
+===
+Info about email:
+NEW PROSPECT EMAIL: {email_address}
+SUBJECT: {subject}
+EMAIL: ''' {email} '''
+
+===
+FORWARDED EMAIL (Return ONLY the Body of the email. NO SUBJECT, RECEIPIENT NAME).
+"""
+
+#COLLABORATION
+COLLAB_NO_COMPANY = """
+Booking Page Link: "https://tidycal.com/synergizeai/agent-test"
+
+You are an email inbox manager for Synergize AI Team; Your goal is to send an email back to the prospect for more information about their company.
+You can also send the link to the booking page with the email response so that they can book the meeting whenever they are available.
 
 ===
 Info about email:
@@ -76,7 +89,7 @@ SUBJECT: {subject}
 EMAIL: ''' {email} '''
 
 ===
-EMAIL (Return ONLY the Body of the email. NO SUBJECT, RECEIPIENT NAME).
+RESPONSE (Return ONLY the Body of the email. NO SUBJECT, RECEIPIENT NAME).
 """
 
 #Meeting
@@ -172,7 +185,11 @@ class EmailGenerator:
         return email_response.content.replace('[Your Name]', 'Synergize AI Team')
             
     def collab_chain(self, email, prospect_email, subject, company_info):
-        prompt = ChatPromptTemplate.from_template(COLLAB)
+        print(company_info)
+        if company_info['is_company'] == 'YES':
+            prompt = ChatPromptTemplate.from_template(COLLAB_COMPANY)
+        else:
+            prompt = ChatPromptTemplate.from_template(COLLAB_NO_COMPANY)
         chain = (
             {
                 "summary": itemgetter('summary'),
@@ -184,7 +201,7 @@ class EmailGenerator:
             | self.llm
         )
         email_summary = chain.invoke({
-            "summary": company_info,
+            "summary": company_info['company_info'],
             'email_address': prospect_email,
             'subject': subject,
             'email': email,
