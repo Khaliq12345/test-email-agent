@@ -1,4 +1,6 @@
 
+import json
+
 def check_consulting_email(client, latest_reply: str):
     prompt = f"""
     EMAIL: {latest_reply}
@@ -133,14 +135,13 @@ def categorise_email(client, latest_reply: str):
         if 'YES' in is_company:
             company_info = check_collab_email(client, latest_reply)
         else:
-            company_info = {
-                'error': 'No company name in email'
-            }
+            company_info = '{"error": "No company name in email"}'
         return {
             "Category": "COLLABORATION/SPONSORSHIP",
             "Step 1": "Research about the prospect & company",
             "Step 2": "Forward the email to jason.zhou.design@gmail.com, with the research results included",
-            'company_info': company_info
+            'company_info': json.loads(company_info),
+            "is_company": is_company,
         }
         
     elif category == "QUESTIONS":
